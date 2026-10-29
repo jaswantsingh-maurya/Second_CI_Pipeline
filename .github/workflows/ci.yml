@@ -1,0 +1,41 @@
+name: Python CI
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Validate Program and Test Cases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          pip install pytest
+      - name: Check Python syntax
+        run: python -m compileall -q .
+      - name: Check test files
+        run: |
+          if ! find . -type f -name "test_*.py" \
+            -not -path "./.git/*" -print -quit | grep -q .; then
+            echo "ERROR: No test files found!"
+            exit 1
+          fi
+      - name: Run pytest
+        run: python -m pytest -v
